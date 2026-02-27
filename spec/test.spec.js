@@ -38,95 +38,95 @@ describe('GCSAdapter tests', () => {
   });
 
   describe('deleteFile', () => {
-    let gcsAdapter
-    let mockStorage
-    let mockBucket
-    let mockFile
-    let mockDelete
+    let gcsAdapter;
+    let mockStorage;
+    let mockBucket;
+    let mockFile;
+    let mockDelete;
 
     beforeEach(() => {
-      mockDelete = jasmine.createSpy('delete')
-      mockFile = { delete: mockDelete }
-      mockBucket = jasmine.createSpyObj('bucket', ['file'])
-      mockBucket.file.and.returnValue(mockFile)
-      mockStorage = jasmine.createSpyObj('storage', ['bucket'])
-      mockStorage.bucket.and.returnValue(mockBucket)
+      mockDelete = jasmine.createSpy('delete');
+      mockFile = { delete: mockDelete };
+      mockBucket = jasmine.createSpyObj('bucket', ['file']);
+      mockBucket.file.and.returnValue(mockFile);
+      mockStorage = jasmine.createSpyObj('storage', ['bucket']);
+      mockStorage.bucket.and.returnValue(mockBucket);
 
       gcsAdapter = new GCSAdapter({
         projectId: 'projectId',
         keyFilename: 'keyFilename',
         bucket: 'bucket',
         bucketPrefix: 'prefix/'
-      })
-      gcsAdapter._gcsClient = mockStorage
-    })
+      });
+      gcsAdapter._gcsClient = mockStorage;
+    });
 
     it('should call delete on the prefixed file and resolve with response', (done) => {
       mockDelete.and.callFake((callback) => {
-        callback(null, { statusCode: 204 })
-      })
+        callback(null, { statusCode: 204 });
+      });
 
-      let result = gcsAdapter.deleteFile('my-file.txt')
-      expect(result && typeof result.then).toBe('function')
-      expect(result && typeof result.catch).toBe('function')
+      let result = gcsAdapter.deleteFile('my-file.txt');
+      expect(result && typeof result.then).toBe('function');
+      expect(result && typeof result.catch).toBe('function');
 
       result.then((response) => {
-        expect(mockStorage.bucket).toHaveBeenCalledWith('bucket')
-        expect(mockBucket.file).toHaveBeenCalledWith('prefix/my-file.txt')
-        expect(mockDelete).toHaveBeenCalled()
-        expect(response.statusCode).toBe(204)
-        done()
+        expect(mockStorage.bucket).toHaveBeenCalledWith('bucket');
+        expect(mockBucket.file).toHaveBeenCalledWith('prefix/my-file.txt');
+        expect(mockDelete).toHaveBeenCalled();
+        expect(response.statusCode).toBe(204);
+        done();
       }).catch((err) => {
-        fail('Promise should not reject: ' + err)
-        done()
-      })
-    })
+        fail('Promise should not reject: ' + err);
+        done();
+      });
+    });
 
     it('should reject when delete returns an error', (done) => {
-      let error = new Error('delete failed')
-      error.code = 403
+      let error = new Error('delete failed');
+      error.code = 403;
       mockDelete.and.callFake((callback) => {
-        callback(error)
-      })
+        callback(error);
+      });
 
       gcsAdapter.deleteFile('my-file.txt')
         .then(() => {
-          fail('Promise should have rejected')
-          done()
+          fail('Promise should have rejected');
+          done();
         })
         .catch((err) => {
-          expect(err).toBe(error)
-          expect(err.code).toBe(403)
-          expect(mockStorage.bucket).toHaveBeenCalledWith('bucket')
-          expect(mockBucket.file).toHaveBeenCalledWith('prefix/my-file.txt')
-          expect(mockDelete).toHaveBeenCalled()
-          done()
-        })
-    })
+          expect(err).toBe(error);
+          expect(err.code).toBe(403);
+          expect(mockStorage.bucket).toHaveBeenCalledWith('bucket');
+          expect(mockBucket.file).toHaveBeenCalledWith('prefix/my-file.txt');
+          expect(mockDelete).toHaveBeenCalled();
+          done();
+        });
+    });
 
     it('should use filename as-is when bucketPrefix is empty', (done) => {
       let adapterWithoutPrefix = new GCSAdapter({
         projectId: 'projectId',
         keyFilename: 'keyFilename',
         bucket: 'bucket'
-      })
-      adapterWithoutPrefix._gcsClient = mockStorage
+      });
+      adapterWithoutPrefix._gcsClient = mockStorage;
 
       mockDelete.and.callFake((callback) => {
-        callback(null, {})
-      })
+        callback(null, {});
+      });
 
       adapterWithoutPrefix.deleteFile('plain-file.txt')
         .then(() => {
-          expect(mockBucket.file).toHaveBeenCalledWith('plain-file.txt')
-          done()
+          expect(mockBucket.file).toHaveBeenCalledWith('plain-file.txt');
+          done();
         })
         .catch((err) => {
-          fail('Promise should not reject: ' + err)
-          done()
-        })
-    })
-  })
+          fail('Promise should not reject: ' + err);
+          done();
+        });
+    });
+  });
 
   if (process.env.GCP_PROJECT_ID && process.env.GCP_KEYFILE_PATH && process.env.GCS_BUCKET) {
     // Should be initialized from the env
